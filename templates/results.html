@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados da Pesquisa</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 22px 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            margin-bottom: 18px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr 180px auto;
+            gap: 10px;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button,
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button.secondary {
+            background: #475569;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .result {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .result h3 {
+            margin: 0 0 8px;
+            word-break: break-word;
+        }
+
+        .path {
+            color: #64748b;
+            font-size: 14px;
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #e2e8f0;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 13px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .score {
+            font-size: 14px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 9px 12px;
+            white-space: nowrap;
+        }
+
+        .reason {
+            margin: 10px 0;
+            color: #475569;
+        }
+
+        .metadata {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .metadata ul {
+            margin: 8px 0 0;
+            padding-left: 20px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        .folder {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 12px;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
+        @media (max-width: 700px) {
+            .search-grid,
+            .result {
+                grid-template-columns: 1fr;
+            }
+
+            .score {
+                justify-self: start;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Resultados da Pesquisa</h1>
+</header>
+
+<main class="container">
+
+    <div class="top-actions">
+        <a class="button secondary" href="{{ url_for('home') }}">Voltar</a>
+        <a class="button secondary" href="{{ url_for('reset') }}">Limpar índice</a>
+    </div>
+
+    <section class="card">
+        <form method="GET" action="{{ url_for('search') }}">
+            <div class="search-grid">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Pesquisar..."
+                    required
+                >
+
+                <select name="kind">
+                    <option value="all" {% if kind == 'all' %}selected{% endif %}>Todos</option>
+                    <option value="document" {% if kind == 'document' %}selected{% endif %}>Documentos</option>
+                    <option value="image" {% if kind == 'image' %}selected{% endif %}>Imagens</option>
+                </select>
+
+                <button type="submit">Pesquisar</button>
+            </div>
+        </form>
+
+        {% if indexed_folder %}
+            <div class="folder">
+                <strong>Pasta indexada:</strong> {{ indexed_folder }}
+            </div>
+        {% endif %}
+    </section>
+
+    {% if results %}
+        <p><strong>{{ results|length }}</strong> resultado(s) encontrado(s) para "<strong>{{ query }}</strong>".</p>
+
+        {% for item in results %}
+            <article class="card result">
+                <div>
+                    <h3>{{ item.record.name }}</h3>
+                    <div class="path">{{ item.record.path }}</div>
+
+                    <span class="badge">
+                        {% if item.record.kind == "document" %}
+                            Documento
+                        {% else %}
+                            Imagem
+                        {% endif %}
+                    </span>
+
+                    <span class="badge">{{ item.record.extension }}</span>
+                    <span class="badge">{{ item.record.size_bytes|filesize }}</span>
+                    <span class="badge">{{ item.record.modified_at|datetime }}</span>
+
+                    <p class="reason">
+                        <strong>Motivo:</strong> {{ item.reason }}
+                    </p>
+
+                    {% if item.record.kind == "document" %}
+                        <div class="metadata">
+                            <strong>Metadados do documento</strong>
+                            <ul>
+                                <li>Total de palavras: {{ item.record.total_words }}</li>
+                                <li>Palavras únicas: {{ item.record.metadata.get("unique_words", 0) }}</li>
+                                <li>
+                                    Palavras mais frequentes:
+                                    {% if item.record.metadata.get("common_words") %}
+                                        {% for palavra, quantidade in item.record.metadata.get("common_words") %}
+                                            {{ palavra }} ({{ quantidade }}){% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        nenhuma
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="metadata">
+                            <strong>Metadados da imagem</strong>
+                            <ul>
+                                <li>Formato: {{ item.record.metadata.get("format", "?") }}</li>
+                                <li>Largura: {{ item.record.metadata.get("width", "?") }} px</li>
+                                <li>Altura: {{ item.record.metadata.get("height", "?") }} px</li>
+                                <li>Modo: {{ item.record.metadata.get("mode", "?") }}</li>
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div style="margin-top: 14px;">
+                        <a
+                            class="button"
+                            href="{{ url_for('open_file', path=item.record.path) }}"
+                            target="_blank"
+                        >
+                            Abrir arquivo
+                        </a>
+                    </div>
+                </div>
+
+                <div class="score">
+                    Relevância: {{ "%.3f"|format(item.relevance) }}
+                </div>
+            </article>
+        {% endfor %}
+    {% else %}
+        <section class="card empty">
+            Nenhum resultado encontrado para "<strong>{{ query }}</strong>".
+        </section>
+    {% endif %}
+
+</main>
+</body>
+</html>
