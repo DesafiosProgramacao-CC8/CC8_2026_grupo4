@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indexador de Arquivos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 22px 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        header p {
+            margin: 6px 0 0;
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            margin-bottom: 22px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+
+        button,
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover,
+        .button:hover {
+            background: #1d4ed8;
+        }
+
+        .button.secondary {
+            background: #475569;
+        }
+
+        .button.secondary:hover {
+            background: #334155;
+        }
+
+        .message {
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .stat {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .indexed-folder {
+            word-break: break-all;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr 180px auto;
+            gap: 10px;
+        }
+
+        .actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .help {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 700px) {
+            .row,
+            .search-grid,
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Indexador de Arquivos</h1>
+    <p>Varredura, indexação e pesquisa de documentos TXT e imagens JPG/PNG.</p>
+</header>
+
+<main class="container">
+
+    {% if message %}
+        <div class="message success">{{ message }}</div>
+    {% endif %}
+
+    {% if error %}
+        <div class="message error">{{ error }}</div>
+    {% endif %}
+
+    <section class="card">
+        <h2>1. Indexar uma pasta</h2>
+
+        <form method="POST" action="{{ url_for('home') }}">
+            <label for="folder">Caminho da pasta</label>
+            <div class="row">
+                <input
+                    type="text"
+                    id="folder"
+                    name="folder"
+                    placeholder="Ex.: C:\Users\Mateus\Documents\arquivos"
+                    value="{{ indexed_folder or '' }}"
+                    required
+                >
+                <button type="submit">Indexar</button>
+            </div>
+        </form>
+
+        <p class="help">
+            O sistema percorre a pasta e suas subpastas. Atualmente são aceitos
+            documentos <strong>.txt</strong> e imagens <strong>.jpg, .jpeg e .png</strong>.
+        </p>
+
+        {% if indexed_folder %}
+            <p><strong>Pasta atualmente indexada:</strong></p>
+            <div class="indexed-folder">{{ indexed_folder }}</div>
+        {% endif %}
+
+        {% if stats %}
+            <div class="stats">
+                <div class="stat">
+                    <strong>{{ stats.documents }}</strong>
+                    Documento(s)
+                </div>
+                <div class="stat">
+                    <strong>{{ stats.images }}</strong>
+                    Imagem(ns)
+                </div>
+                <div class="stat">
+                    <strong>{{ stats.skipped }}</strong>
+                    Ignorado(s)
+                </div>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="card">
+        <h2>2. Pesquisar</h2>
+
+        {% if indexed_folder %}
+            <form method="GET" action="{{ url_for('search') }}">
+                <div class="search-grid">
+                    <input
+                        type="text"
+                        name="q"
+                        placeholder="Digite nome, caminho, palavra ou metadado..."
+                        required
+                    >
+
+                    <select name="kind">
+                        <option value="all">Todos</option>
+                        <option value="document">Documentos</option>
+                        <option value="image">Imagens</option>
+                    </select>
+
+                    <button type="submit">Pesquisar</button>
+                </div>
+            </form>
+
+            <div class="actions">
+                <a class="button secondary" href="{{ url_for('reset') }}">Limpar índice</a>
+            </div>
+        {% else %}
+            <p class="help">
+                Primeiro informe e indexe uma pasta. Depois a pesquisa será liberada.
+            </p>
+        {% endif %}
+    </section>
+
+</main>
+</body>
+</html>
