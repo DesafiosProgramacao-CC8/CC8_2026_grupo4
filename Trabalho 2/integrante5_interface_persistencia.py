@@ -1,5 +1,3 @@
-"""Integrante 5 - Persistência, CARREGARBD/CARREGARIFFARQL e terminal."""
-
 import json
 import os
 
