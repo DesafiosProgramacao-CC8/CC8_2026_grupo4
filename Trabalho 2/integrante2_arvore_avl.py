@@ -1,9 +1,3 @@
-"""Integrante 2 - Árvore AVL.
-
-Este arquivo reaproveita a implementação de ArvoreAVL do Trabalho Integrador I
-(integrante2_arvore_avl.py) e acrescenta a remoção, necessária ao IFFARQL.
-"""
-
 from dataclasses import dataclass
 from typing import Any, Generator, Optional, Tuple
 
