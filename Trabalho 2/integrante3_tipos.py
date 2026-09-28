@@ -1,6 +1,3 @@
-"""Integrante 3 - Tipos de dados, validações e operações.
-Darley Rosa Socoloski
-"""
 from abc import ABC, abstractmethod
 import re
 import unicodedata
