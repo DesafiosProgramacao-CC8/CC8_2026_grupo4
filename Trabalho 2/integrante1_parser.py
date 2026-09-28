@@ -1,9 +1,3 @@
-"""Integrante 1 - Leitura e interpretação dos comandos IFFARQL.
-
-Mantido propositalmente simples: transforma uma linha digitada em um dicionário
-que o executor do banco consegue processar.
-"""
-
 from dataclasses import dataclass
 import re
 from typing import List
